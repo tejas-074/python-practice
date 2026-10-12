@@ -1,0 +1,6 @@
+INFO: Test started
+INFO: Opening login page
+ERROR: Element not found
+INFO: Retrying
+ERROR: Timeout after 30 seconds
+INFO: Test finished
