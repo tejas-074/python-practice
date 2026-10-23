@@ -1,10 +1,7 @@
-import pytest
-from playwright.sync_api import Page, expect
+from playwright.sync_api import expect
+import config
 
-@pytest.mark.smoke
-def test_login_success(page: Page):
-    page.goto("https://www.saucedemo.com/")
-    page.locator("[data-test=\"username\"]").fill("standard_user")
-    page.locator("[data-test=\"password\"]").fill("secret_sauce")
-    page.locator("[data-test=\"login-button\"]").click()
-    expect(page.locator('[data-test="title"]')).to_have_text("Products")
+def test_login_success(login_page):
+    login_page.open()
+    login_page.login(config.USERNAME, config.PASSWORD)
+    expect(login_page.page.get_by_test_id("title")).to_have_text("Products")
