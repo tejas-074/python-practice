@@ -25,3 +25,13 @@ def inventory_page(page, login_page):
     login_page.open()
     login_page.login(config.USERNAME, config.PASSWORD)
     return InventoryPage(page)
+
+@pytest.fixture
+def api_logged_in_page(playwright, browser):
+    api = playwright.request.new_context(base_url="https://the-internet.herokuapp.com")
+    api.post("/authenticate", form={"username": "tomsmith", "password": "SuperSecretPassword!"})
+    context = browser.new_context(storage_state=api.storage_state())
+    page = context.new_page()
+    yield page
+    context.close()
+    api.dispose()
