@@ -35,3 +35,16 @@ def api_logged_in_page(playwright, browser):
     yield page
     context.close()
     api.dispose()
+
+import base64
+from pytest_html import extras
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    if report.when == "call" and report.failed:
+        page = item.funcargs.get("page")
+        if page:
+            png = base64.b64encode(page.screenshot()).decode()
+            report.extras = getattr(report, "extras", []) + [extras.png(png)]
