@@ -1,4 +1,5 @@
 import pytest
+import sqlite3
 import config
 from playwright.sync_api import Page
 from pages.login_page import LoginPage
@@ -48,3 +49,9 @@ def pytest_runtest_makereport(item, call):
         if page:
             png = base64.b64encode(page.screenshot()).decode()
             report.extras = getattr(report, "extras", []) + [extras.png(png)]
+
+@pytest.fixture
+def db():
+    conn = sqlite3.connect("foodapp.db")
+    yield conn
+    conn.close()
