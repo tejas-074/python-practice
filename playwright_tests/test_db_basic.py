@@ -1,3 +1,4 @@
+import pytest
 import sqlite3
 
 def test_amit_orders_total():
@@ -74,3 +75,88 @@ def test_orders_from_surat(db):
         ORDER BY item
     """, ("Surat",)).fetchall()
     assert rows == [("Burger",), ("Pizza",)]
+
+def test_customers_with_many_orders(db):
+    rows = db.execute("""
+        SELECT customer_id, COUNT(*)
+        FROM Orders
+        GROUP BY customer_id
+        HAVING COUNT(*) > 1
+    """).fetchall()
+    assert rows == [(1, 2)]
+
+def test_most_expensive_order(db):
+    row = db.execute("""
+        SELECT item, amount
+        FROM Orders
+        ORDER BY amount DESC
+        LIMIT 1
+    """).fetchone()
+    assert row == ("Pizza", 300)
+
+def test_items_starting_with_p(db):
+    rows = db.execute("""
+        SELECT item FROM Orders
+        WHERE item LIKE 'P%'
+        ORDER BY item
+    """).fetchall()
+    assert rows == [("Pasta",), ("Pizza",)]
+
+def test_distinct_customers(db):
+    all_orders = db.execute("SELECT COUNT(customer_id) FROM Orders").fetchone()[0]
+    people = db.execute("SELECT COUNT(DISTINCT customer_id) FROM Orders").fetchone()[0]
+    assert all_orders == 3
+    assert people == 2
+
+def test_orders_between(db):
+    rows = db.execute("""
+        SELECT item FROM Orders
+        WHERE amount BETWEEN 200 AND 300
+        ORDER BY item
+    """).fetchall()
+    assert rows == [("Pasta",), ("Pizza",)]
+
+def test_second_highest_order(db):
+    amount = db.execute("""
+        SELECT amount FROM Orders
+        ORDER BY amount DESC
+        LIMIT 1 OFFSET 1
+    """).fetchone()[0]
+    assert amount == 250
+
+def test_big_spenders(db):
+    rows = db.execute("""
+        SELECT Customers.name, SUM(Orders.amount)
+        FROM Customers
+        INNER JOIN Orders ON Customers.id = Orders.customer_id
+        GROUP BY Customers.name
+        HAVING SUM(Orders.amount) > 300
+    """).fetchall()
+    assert rows == [("Amit", 450)]
+
+def test_update_then_rollback(db):
+    db.execute("UPDATE Orders SET amount = ? WHERE id = ?", (999, 1))
+    changed = db.execute("SELECT amount FROM Orders WHERE id = 1").fetchone()[0]
+    assert changed == 999
+
+    db.rollback()
+    original = db.execute("SELECT amount FROM Orders WHERE id = 1").fetchone()[0]
+    assert original == 300
+
+def test_customer_name_is_required(db):
+    with pytest.raises(sqlite3.IntegrityError):
+        db.execute("INSERT INTO Customers VALUES (?, ?, ?)", (50, None, "Delhi"))
+
+def test_duplicate_customer_id_refused(db):
+    with pytest.raises(sqlite3.IntegrityError):
+        db.execute("INSERT INTO Customers VALUES (?, ?, ?)", (1, "Neha", "Delhi"))
+
+def test_orders_per_customer(db):
+    rows = db.execute("""
+        SELECT Customers.name, COUNT(Orders.id)
+        FROM Customers
+        LEFT JOIN Orders ON Customers.id = Orders.customer_id
+        GROUP BY Customers.name
+        ORDER BY Customers.name
+    """).fetchall()
+    assert rows == [("Amit", 2), ("Karan", 0), ("Riya", 1)]
