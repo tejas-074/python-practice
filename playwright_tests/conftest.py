@@ -1,4 +1,6 @@
 import pytest
+import os
+import pymysql
 import sqlite3
 import config
 from playwright.sync_api import Page
@@ -53,5 +55,14 @@ def pytest_runtest_makereport(item, call):
 @pytest.fixture
 def db():
     conn = sqlite3.connect("foodapp.db")
+    yield conn
+    conn.close()
+
+@pytest.fixture
+def mysql_db():
+    password = os.environ.get("MYSQL_PASSWORD")
+    if not password:
+        pytest.skip("MYSQL_PASSWORD is not set")
+    conn = pymysql.connect(host="localhost", user="qa_tester", password=password, database="foodapp")
     yield conn
     conn.close()
