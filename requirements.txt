@@ -1,0 +1,7 @@
+pytest-playwright==0.10.0
+pytest-xdist==3.8.0
+pytest-rerunfailures==16.7
+pytest-html==4.2.0
+allure-pytest==2.16.2
+requests==2.34.2
+pymysql==1.2.3
