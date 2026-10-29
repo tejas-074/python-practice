@@ -1,0 +1,10 @@
+venv/
+.git/
+test-results/
+allure-results/
+allure-report/
+allure-report-all/
+report.html
+foodapp.db
+__pycache__/
+.pytest_cache/

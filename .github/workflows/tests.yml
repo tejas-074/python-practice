@@ -26,3 +26,12 @@ jobs:
         with:
           name: test-report
           path: report.html
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: docker build -t foodapp .
+
+      - run: docker run --rm foodapp
